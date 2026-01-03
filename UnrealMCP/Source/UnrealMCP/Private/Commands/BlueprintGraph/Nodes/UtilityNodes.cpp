@@ -12,13 +12,13 @@
 
 UK2Node* FUtilityNodeCreator::CreatePrintNode(UEdGraph* Graph, const TSharedPtr<FJsonObject>& Params)
 {
-	if (\!Graph || \!Params.IsValid())
+	if (!Graph || !Params.IsValid())
 	{
 		return nullptr;
 	}
 
 	UK2Node_CallFunction* PrintNode = NewObject<UK2Node_CallFunction>(Graph);
-	if (\!PrintNode)
+	if (!PrintNode)
 	{
 		return nullptr;
 	}
@@ -27,7 +27,7 @@ UK2Node* FUtilityNodeCreator::CreatePrintNode(UEdGraph* Graph, const TSharedPtr<
 		GET_FUNCTION_NAME_CHECKED(UKismetSystemLibrary, PrintString)
 	);
 
-	if (\!PrintFunc)
+	if (!PrintFunc)
 	{
 		return nullptr;
 	}
@@ -57,20 +57,20 @@ UK2Node* FUtilityNodeCreator::CreatePrintNode(UEdGraph* Graph, const TSharedPtr<
 
 UK2Node* FUtilityNodeCreator::CreateCallFunctionNode(UEdGraph* Graph, const TSharedPtr<FJsonObject>& Params)
 {
-	if (\!Graph || \!Params.IsValid())
+	if (!Graph || !Params.IsValid())
 	{
 		return nullptr;
 	}
 
 	FString TargetFunction;
-	if (\!Params->TryGetStringField(TEXT("target_function"), TargetFunction))
+	if (!Params->TryGetStringField(TEXT("target_function"), TargetFunction))
 	{
 		UE_LOG(LogTemp, Error, TEXT("CreateCallFunctionNode: Missing target_function parameter"));
 		return nullptr;
 	}
 
 	UK2Node_CallFunction* CallNode = NewObject<UK2Node_CallFunction>(Graph);
-	if (\!CallNode)
+	if (!CallNode)
 	{
 		return nullptr;
 	}
@@ -89,7 +89,7 @@ UK2Node* FUtilityNodeCreator::CreateCallFunctionNode(UEdGraph* Graph, const TSha
 			{
 				TargetFunc = Blueprint->SkeletonGeneratedClass->FindFunctionByName(FName(*TargetFunction));
 			}
-			if (\!TargetFunc && Blueprint->GeneratedClass)
+			if (!TargetFunc && Blueprint->GeneratedClass)
 			{
 				TargetFunc = Blueprint->GeneratedClass->FindFunctionByName(FName(*TargetFunction));
 			}
@@ -108,7 +108,7 @@ UK2Node* FUtilityNodeCreator::CreateCallFunctionNode(UEdGraph* Graph, const TSha
 		if (Params->TryGetStringField(TEXT("target_class"), ClassName))
 		{
 			UClass* TargetClass = FindObject<UClass>(nullptr, *ClassName);
-			if (\!TargetClass)
+			if (!TargetClass)
 			{
 				TargetClass = LoadObject<UClass>(nullptr, *ClassName);
 			}
@@ -118,16 +118,16 @@ UK2Node* FUtilityNodeCreator::CreateCallFunctionNode(UEdGraph* Graph, const TSha
 			}
 		}
 
-		if (\!TargetFunc)
+		if (!TargetFunc)
 		{
 			TargetFunc = UKismetSystemLibrary::StaticClass()->FindFunctionByName(FName(*TargetFunction));
 		}
-		if (\!TargetFunc)
+		if (!TargetFunc)
 		{
 			TargetFunc = UKismetMathLibrary::StaticClass()->FindFunctionByName(FName(*TargetFunction));
 		}
 
-		if (\!TargetFunc)
+		if (!TargetFunc)
 		{
 			UE_LOG(LogTemp, Error, TEXT("CreateCallFunctionNode: Function not found: %s"), *TargetFunction);
 			return nullptr;
@@ -209,13 +209,13 @@ FName FUtilityNodeCreator::GetMathFunctionName(const FString& Operation)
 
 UK2Node* FUtilityNodeCreator::CreateMathNode(UEdGraph* Graph, const TSharedPtr<FJsonObject>& Params)
 {
-	if (\!Graph || \!Params.IsValid())
+	if (!Graph || !Params.IsValid())
 	{
 		return nullptr;
 	}
 
 	FString Operation;
-	if (\!Params->TryGetStringField(TEXT("operation"), Operation))
+	if (!Params->TryGetStringField(TEXT("operation"), Operation) && !Params->TryGetStringField(TEXT("target_function"), Operation))
 	{
 		UE_LOG(LogTemp, Error, TEXT("CreateMathNode: Missing operation parameter"));
 		return nullptr;
@@ -223,14 +223,14 @@ UK2Node* FUtilityNodeCreator::CreateMathNode(UEdGraph* Graph, const TSharedPtr<F
 
 	FName FunctionName = GetMathFunctionName(Operation);
 	UFunction* MathFunc = UKismetMathLibrary::StaticClass()->FindFunctionByName(FunctionName);
-	if (\!MathFunc)
+	if (!MathFunc)
 	{
 		UE_LOG(LogTemp, Error, TEXT("CreateMathNode: Math function not found: %s"), *FunctionName.ToString());
 		return nullptr;
 	}
 
 	UK2Node_CallFunction* MathNode = NewObject<UK2Node_CallFunction>(Graph);
-	if (\!MathNode)
+	if (!MathNode)
 	{
 		return nullptr;
 	}
@@ -251,13 +251,13 @@ UK2Node* FUtilityNodeCreator::CreateMathNode(UEdGraph* Graph, const TSharedPtr<F
 
 UK2Node* FUtilityNodeCreator::CreateSelectNode(UEdGraph* Graph, const TSharedPtr<FJsonObject>& Params)
 {
-	if (\!Graph || \!Params.IsValid())
+	if (!Graph || !Params.IsValid())
 	{
 		return nullptr;
 	}
 
 	UK2Node_Select* SelectNode = NewObject<UK2Node_Select>(Graph);
-	if (\!SelectNode)
+	if (!SelectNode)
 	{
 		return nullptr;
 	}
@@ -275,13 +275,13 @@ UK2Node* FUtilityNodeCreator::CreateSelectNode(UEdGraph* Graph, const TSharedPtr
 
 UK2Node* FUtilityNodeCreator::CreateSpawnActorNode(UEdGraph* Graph, const TSharedPtr<FJsonObject>& Params)
 {
-	if (\!Graph || \!Params.IsValid())
+	if (!Graph || !Params.IsValid())
 	{
 		return nullptr;
 	}
 
 	UK2Node_SpawnActorFromClass* SpawnActorNode = NewObject<UK2Node_SpawnActorFromClass>(Graph);
-	if (\!SpawnActorNode)
+	if (!SpawnActorNode)
 	{
 		return nullptr;
 	}
