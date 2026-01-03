@@ -150,14 +150,14 @@ UK2Node* FUtilityNodeCreator::CreateCallFunctionNode(UEdGraph* Graph, const TSha
 FName FUtilityNodeCreator::GetMathFunctionName(const FString& Operation)
 {
 	static TMap<FString, FName> OperationMap = {
-		{TEXT("Add"), TEXT("Add_FloatFloat")},
-		{TEXT("Subtract"), TEXT("Subtract_FloatFloat")},
-		{TEXT("Multiply"), TEXT("Multiply_FloatFloat")},
-		{TEXT("Divide"), TEXT("Divide_FloatFloat")},
-		{TEXT("Add_FloatFloat"), TEXT("Add_FloatFloat")},
-		{TEXT("Subtract_FloatFloat"), TEXT("Subtract_FloatFloat")},
-		{TEXT("Multiply_FloatFloat"), TEXT("Multiply_FloatFloat")},
-		{TEXT("Divide_FloatFloat"), TEXT("Divide_FloatFloat")},
+		{TEXT("Add"), TEXT("Add_DoubleDouble")},
+		{TEXT("Subtract"), TEXT("Subtract_DoubleDouble")},
+		{TEXT("Multiply"), TEXT("Multiply_DoubleDouble")},
+		{TEXT("Divide"), TEXT("Divide_DoubleDouble")},
+		{TEXT("Add_DoubleDouble"), TEXT("Add_DoubleDouble")},
+		{TEXT("Subtract_DoubleDouble"), TEXT("Subtract_DoubleDouble")},
+		{TEXT("Multiply_DoubleDouble"), TEXT("Multiply_DoubleDouble")},
+		{TEXT("Divide_DoubleDouble"), TEXT("Divide_DoubleDouble")},
 		{TEXT("Add_IntInt"), TEXT("Add_IntInt")},
 		{TEXT("Subtract_IntInt"), TEXT("Subtract_IntInt")},
 		{TEXT("Multiply_IntInt"), TEXT("Multiply_IntInt")},
