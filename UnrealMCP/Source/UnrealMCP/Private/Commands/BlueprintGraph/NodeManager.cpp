@@ -169,6 +169,10 @@ TSharedPtr<FJsonObject> FBlueprintNodeManager::AddNode(const TSharedPtr<FJsonObj
 	{
 		NewNode = FUtilityNodeCreator::CreateSpawnActorNode(Graph, NodeParams);
 	}
+	else if (NodeType.Equals(TEXT("Math"), ESearchCase::IgnoreCase))
+	{
+		NewNode = FUtilityNodeCreator::CreateMathNode(Graph, NodeParams);
+	}
 	// Casting Nodes
 	else if (NodeType.Equals(TEXT("DynamicCast"), ESearchCase::IgnoreCase))
 	{
