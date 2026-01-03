@@ -1,0 +1,134 @@
+name: Build UnrealMCP Plugin
+
+on:
+  push:
+    branches: [master, main]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [master, main]
+
+env:
+  PLUGIN_NAME: UnrealMCP
+
+jobs:
+  build:
+    runs-on: self-hosted
+    # Requires a self-hosted Windows runner with Unreal Engine installed
+    # Set UE_ROOT environment variable on your runner (e.g., C:\Program Files\Epic Games\UE_5.4)
+
+    strategy:
+      matrix:
+        ue_version: ['5.4', '5.5', '5.6']
+        platform: [Win64]
+        config: [Development]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set UE paths
+        shell: pwsh
+        run: |
+          $UE_ROOT = "C:\Program Files\Epic Games\UE_${{ matrix.ue_version }}"
+          if (Test-Path $UE_ROOT) {
+            echo "UE_ROOT=$UE_ROOT" >> $env:GITHUB_ENV
+            echo "Found Unreal Engine ${{ matrix.ue_version }} at $UE_ROOT"
+          } else {
+            echo "::warning::Unreal Engine ${{ matrix.ue_version }} not found at $UE_ROOT"
+            exit 1
+          }
+
+      - name: Create temporary project for building
+        shell: pwsh
+        run: |
+          $TempProject = "${{ runner.temp }}\TempProject"
+          New-Item -ItemType Directory -Force -Path "$TempProject\Plugins"
+
+          # Copy plugin to temp project
+          Copy-Item -Path ".\*" -Destination "$TempProject\Plugins\${{ env.PLUGIN_NAME }}" -Recurse -Exclude @(".git", ".github")
+
+          # Create minimal .uproject file
+          $UProject = @{
+            FileVersion = 3
+            EngineAssociation = "${{ matrix.ue_version }}"
+            Plugins = @(
+              @{
+                Name = "${{ env.PLUGIN_NAME }}"
+                Enabled = $true
+              }
+            )
+          } | ConvertTo-Json -Depth 3
+
+          Set-Content -Path "$TempProject\TempProject.uproject" -Value $UProject
+          echo "TEMP_PROJECT=$TempProject" >> $env:GITHUB_ENV
+
+      - name: Build plugin
+        shell: pwsh
+        run: |
+          $BuildBat = "${{ env.UE_ROOT }}\Engine\Build\BatchFiles\Build.bat"
+          $UProjectPath = "${{ env.TEMP_PROJECT }}\TempProject.uproject"
+
+          & $BuildBat TempProjectEditor ${{ matrix.platform }} ${{ matrix.config }} -Project="$UProjectPath" -WaitMutex -FromMsBuild
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Build failed with exit code $LASTEXITCODE"
+          }
+
+      - name: Package plugin
+        shell: pwsh
+        run: |
+          $PluginPath = "${{ env.TEMP_PROJECT }}\Plugins\${{ env.PLUGIN_NAME }}"
+          $OutputPath = "${{ runner.temp }}\Package"
+
+          New-Item -ItemType Directory -Force -Path $OutputPath
+
+          # Copy plugin files (excluding intermediate)
+          $Items = @("Binaries", "Content", "Resources", "Source", "*.uplugin")
+          foreach ($Item in $Items) {
+            $SourcePath = Join-Path $PluginPath $Item
+            if (Test-Path $SourcePath) {
+              Copy-Item -Path $SourcePath -Destination $OutputPath -Recurse -Force
+            }
+          }
+
+          echo "PACKAGE_PATH=$OutputPath" >> $env:GITHUB_ENV
+
+      - name: Create artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PLUGIN_NAME }}-UE${{ matrix.ue_version }}-${{ matrix.platform }}-${{ matrix.config }}
+          path: ${{ env.PACKAGE_PATH }}
+          retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release packages
+        run: |
+          cd artifacts
+          for dir in */; do
+            name="${dir%/}"
+            zip -r "../${name}.zip" "$dir"
+          done
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "*.zip"
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, '-alpha') || contains(github.ref, '-beta') || contains(github.ref, '-rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
